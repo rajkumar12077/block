@@ -27,6 +27,6 @@ export default defineConfig({
       }
     },
     // ✅ Allow ngrok host
-    allowedHosts: ['unsparingly-unskilled-conner.ngrok-free.dev']
+    allowedHosts: ['unsparingly-unskilled-conner.ngrok-free.dev','devserver-main--agrisupply.netlify.app']
   }
 })
