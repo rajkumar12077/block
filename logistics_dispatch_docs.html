@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Dispatch Flow Documentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #16a085;
+        }
+        pre {
+            background-color: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #3498db;
+        }
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .flow-diagram {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+        }
+        .code-block {
+            margin: 20px 0;
+        }
+        .note {
+            background-color: #ffffcc;
+            border-left: 4px solid #ffcc00;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .api-endpoint {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AgriBlock Logistics Dispatch System Documentation</h1>
+        
+        <section>
+            <h2>Overview</h2>
+            <p>
+                The AgriBlock logistics dispatch system allows sellers to dispatch orders to logistics providers with 
+                conditional routing. This system now supports two dispatch pathways:
+            </p>
+            <ol>
+                <li><strong>Direct to customer delivery</strong> - Standard shipping directly to the buyer</li>
+                <li><strong>Cold storage routing</strong> - Products requiring temperature control are first sent to cold storage facilities</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Dispatch Flow Diagram</h2>
+            <div class="flow-diagram">
+                <pre>
+┌─────────────┐     dispatch      ┌─────────────┐
+│             │  with destination  │             │
+│    Seller   │ ─────────────────> │    Order    │
+│             │                    │   Service   │
+└─────────────┘                    └──────┬──────┘
+                                          │
+                                          │ check destination
+                                          ▼
+                             ┌─────────────────────────┐
+                             │                         │
+                  ┌──────────┤   Delivery Destination  ├──────────┐
+                  │          │                         │          │
+                  │          └─────────────────────────┘          │
+                  ▼                                               ▼
+        ┌─────────────────┐                              ┌────────────────┐
+        │    Customer     │                              │  Cold Storage  │
+        │  (status=shipped)│                              │  (status=     │
+        │                 │                              │  dispatched_to_│
+        └────────┬────────┘                              │  coldstorage)  │
+                 │                                       └────────┬───────┘
+                 │                                                │
+                 │                                                │
+                 ▼                                                ▼
+        ┌─────────────────┐                              ┌────────────────┐
+        │    Delivered    │                              │  Transfer to   │
+        │  to Customer    │                              │  Cold Storage  │
+        │                 │                              │                │
+        └─────────────────┘                              └────────┬───────┘
+                                                                  │
+                                                                  │
+                                                                  ▼
+                                                        ┌────────────────┐
+                                                        │ Final Delivery │
+                                                        │  to Customer   │
+                                                        │                │
+                                                        └────────────────┘
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>API Endpoints</h2>
+            
+            <div class="api-endpoint">
+                <h3>Dispatch Order to Logistics</h3>
+                <p><strong>Endpoint:</strong> POST /order/dispatch-to-logistics</p>
+                <p><strong>Authorization Required:</strong> Yes (Seller role)</p>
+                <p><strong>Description:</strong> Dispatches an order to a logistics provider with specified delivery destination</p>
+                
+                <div class="code-block">
+                    <h4>Request Body:</h4>
+                    <pre><code>{
+  "orderId": "ORDER123",
+  "logisticsId": "LOGISTICS456",
+  "deliveryDestination": "customer" // or "coldstorage"
+}</code></pre>
+                </div>
+                
+                <div class="code-block">
+                    <h4>Response (Success):</h4>
+                    <pre><code>{
+  "success": true,
+  "message": "Order dispatched to logistics for direct delivery",
+  "deliveryDestination": "customer",
+  "status": "shipped",
+  "order": {
+    "orderId": "ORDER123",
+    "productName": "Organic Apples",
+    "status": "shipped",
+    "logisticsName": "Express Logistics Ltd.",
+    "dispatchDate": "2023-05-15T10:30:45.123Z",
+    "deliveryDestination": "customer"
+  }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Order Status Transitions</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Initial Status</th>
+                        <th>Delivery Destination</th>
+                        <th>New Status</th>
+                        <th>Next Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>pending</td>
+                        <td>customer</td>
+                        <td>shipped</td>
+                        <td>delivered</td>
+                    </tr>
+                    <tr>
+                        <td>pending</td>
+                        <td>coldstorage</td>
+                        <td>dispatched_to_coldstorage</td>
+                        <td>in_coldstorage</td>
+                    </tr>
+                    <tr>
+                        <td>in_coldstorage</td>
+                        <td>customer</td>
+                        <td>dispatched_to_customer</td>
+                        <td>delivered</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Implementation Details</h2>
+            
+            <h3>Backend Implementation</h3>
+            <p>The order.service.ts file implements the dispatch logic:</p>
+            <div class="code-block">
+                <pre><code>async dispatchToLogistics(orderId: string, logisticsId: string, sellerId: string, deliveryDestination: string = 'customer') {
+    // Find the order and verify it belongs to this seller
+    const order = await this.orderModel.findOne({ 
+        orderId, 
+        sellerId 
+    });
+    
+    // Check if this order requires cold storage or direct delivery
+    // If deliveryDestination is explicitly set to 'coldstorage', send it there
+    // Otherwise, ship directly to the customer
+    const requiresColdStorage = deliveryDestination === 'coldstorage';
+    const newStatus = requiresColdStorage ? 'dispatched_to_coldstorage' : 'shipped';
+    
+    // Update order with logistics info and appropriate status
+    await this.orderModel.updateOne(
+        { orderId },
+        {
+            status: newStatus,
+            deliveryDestination: deliveryDestination,
+            logisticsId: logistics._id,
+            logisticsName: logistics.name,
+            logisticsEmail: logistics.email,
+            dispatchDate: dateString,
+        }
+    );
+}</code></pre>
+            </div>
+
+            <h3>Frontend Implementation</h3>
+            <p>The OrderHistoryTable.tsx component provides the UI for dispatching orders:</p>
+            <div class="code-block">
+                <pre><code>const handleDispatchToLogistics = async () => {
+    try {
+        if (!selectedLogisticsId) {
+            setError('Please select a logistics provider');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        await axios.post('/order/dispatch-to-logistics', {
+            orderId: selectedOrderId,
+            logisticsId: selectedLogisticsId,
+            deliveryDestination: needsColdStorage ? 'coldstorage' : 'customer'
+        }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setSuccess('Order successfully dispatched to logistics provider!');
+        setDispatchDialog(false);
+        setSelectedOrderId('');
+        setSelectedLogisticsId('');
+        fetchOrders(); // Refresh orders to update status
+    } catch (error) {
+        console.error('Failed to dispatch to logistics:', error);
+        setError('Failed to dispatch order: ' + (error.response?.data?.message || error.message));
+    }
+};</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Testing The Dispatch System</h2>
+            <p>
+                A test script (test_logistics_dispatch.js) is included in the project to test the dispatch functionality.
+                Follow these steps to test:
+            </p>
+            <ol>
+                <li>Ensure the backend server is running</li>
+                <li>Open the test_logistics_dispatch.js file and add the required values:</li>
+                <ul>
+                    <li>sellerToken - A valid JWT token for a seller account</li>
+                    <li>orderId - The ID of a pending order</li>
+                    <li>logisticsId - The ID of a logistics provider</li>
+                </ul>
+                <li>Uncomment the test function you want to run</li>
+                <li>Run the script: <code>node test_logistics_dispatch.js</code></li>
+            </ol>
+            <div class="note">
+                <strong>Note:</strong> You can use the test functions to verify both direct delivery and cold storage dispatch flows.
+            </div>
+        </section>
+
+        <section>
+            <h2>MongoDB Schema</h2>
+            <p>The Order schema includes the necessary fields for tracking delivery destination:</p>
+            <div class="code-block">
+                <pre><code>@Schema()
+export class Order {
+  // Other fields...
+
+  @Prop({ required: true, default: 'pending', enum: ['pending', 'shipped', 'dispatched_to_coldstorage', 'in_coldstorage', 'dispatched_to_customer', 'delivered', 'cancelled'] })
+  status: string;
+
+  @Prop({ enum: ['customer', 'coldstorage'], default: 'customer' })
+  deliveryDestination: string;
+
+  // Other fields...
+}</code></pre>
+            </div>
+        </section>
+
+        <footer style="margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; text-align: center; color: #777;">
+            <p>AgriBlock Logistics Dispatch System Documentation - Updated May 2023</p>
+        </footer>
+    </div>
+</body>
+</html>
