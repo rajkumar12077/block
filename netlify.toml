@@ -1,5 +1,5 @@
 [build]
   command = "npm run build:all"
-  publish = "frontend/build"
+  publish = "frontend/dist" # if Vite → dist
   functions = "backend/functions"
 
