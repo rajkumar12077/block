@@ -1,0 +1,5 @@
+[build]
+  command = "npm run build:all"
+  publish = "frontend/build"
+  functions = "backend/functions"
+
